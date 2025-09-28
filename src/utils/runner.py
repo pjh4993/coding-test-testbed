@@ -1,3 +1,5 @@
+# ruff: noqa: S101
+
 """Utility functions."""
 
 import logging
@@ -7,7 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 def run_and_assert(
-    solution: Callable, in_args: Tuple, expected: Any, description: str = ""
+    solution: Callable,
+    in_args: Tuple,
+    expected: Any,
+    description: str = "",
+    validator: Callable = lambda x, y: x == y,
 ):
     """Assert and print the expected and actual values."""
 
@@ -17,7 +23,7 @@ def run_and_assert(
         logger.debug("--------------------------------")
         logger.debug(f"Running test: {description}")
         actual = solution(*in_args)
-        assert expected == actual
+        assert validator(expected, actual)
     except AssertionError as ase:
         logger.debug("AssertionError: %s", ase, exc_info=True)
         raise ase

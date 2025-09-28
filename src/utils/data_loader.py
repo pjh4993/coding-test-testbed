@@ -64,10 +64,10 @@ class TestDataLoader:
         """
         try:
             import yaml
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "PyYAML is required for YAML support. Install with: pip install pyyaml"
-            )
+            ) from e
 
         file_path = Path(file_path)
         if not file_path.exists():
@@ -100,10 +100,10 @@ class TestDataLoader:
         """
         try:
             import pandas as pd
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "pandas is required for Parquet support. Install with: pip install pandas pyarrow"
-            )
+            ) from e
 
         file_path = Path(file_path)
         if not file_path.exists():
@@ -112,10 +112,9 @@ class TestDataLoader:
         # Read the parquet file
         df = pd.read_parquet(file_path)
 
-        # Check if any of the columns are numpy and convert to list
+        # Convert all numpy arrays to lists recursively
         for col in df.columns:
-            if isinstance(df[col].iloc[0], np.ndarray):
-                df[col] = df[col].apply(lambda x: x.tolist())
+            df[col] = df[col].apply(TestDataLoader._convert_numpy_to_list)
 
         # Convert DataFrame to list of dictionaries
         test_cases = []
@@ -137,6 +136,40 @@ class TestDataLoader:
             test_cases.append(case)
 
         return test_cases
+
+    @staticmethod
+    def _numpy_to_list(value: Any) -> Any:
+        """Convert numpy to list."""
+
+        if isinstance(value, np.ndarray):
+            return value.tolist()
+
+        return value
+
+    @staticmethod
+    def _convert_numpy_to_list(value: Any) -> Any:
+        """Recursively convert numpy arrays to Python lists.
+
+        This method handles:
+        - Direct numpy arrays
+        - Lists containing numpy arrays
+        - Nested lists with numpy arrays
+        - Dictionaries with numpy array values
+
+        Args:
+            value: The value to convert
+
+        Returns:
+            The value with all numpy arrays converted to Python lists
+        """
+        if isinstance(value, np.ndarray):
+            return value.tolist()
+        elif isinstance(value, list):
+            return [TestDataLoader._convert_numpy_to_list(item) for item in value]
+        elif isinstance(value, dict):
+            return {key: TestDataLoader._convert_numpy_to_list(val) for key, val in value.items()}
+        else:
+            return value
 
     @staticmethod
     def _parametrize_from_file(
@@ -176,12 +209,12 @@ class TestDataLoader:
             for key in input_keys:
                 if key not in case.get("inputs", {}):
                     raise KeyError(f"Input key '{key}' not found in test case")
-                param.append(deepcopy(case["inputs"][key]))
+                param.append(deepcopy(TestDataLoader._convert_numpy_to_list(case["inputs"][key])))
 
             # Add expected result
             if expected_key not in case:
                 raise KeyError(f"Expected key '{expected_key}' not found in test case")
-            param.append(deepcopy(case[expected_key]))
+            param.append(deepcopy(TestDataLoader._convert_numpy_to_list(case[expected_key])))
 
             # Add description if available
             if description_key in case:

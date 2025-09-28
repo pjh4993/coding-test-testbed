@@ -50,8 +50,12 @@ class TestDataGenerator:
 
         test_cases: list[TestCase] = []
         for config in configs:
-            test_case = config.generator_function()
-            test_cases.append(test_case)
+            generated = config.generator_function()
+
+            if not isinstance(generated, list):
+                generated = [generated]
+
+            test_cases.extend(generated)
 
         TestDataGenerator._save_test_data(test_cases, path)
 
@@ -79,9 +83,7 @@ class TestDataGenerator:
 def generate_test_data_from_generator():
     """Generate test data from a generator."""
 
-    test_data_generators = glob(
-        settings.TEST_DATA_GENERATOR_PATH_PATTERN, recursive=True
-    )
+    test_data_generators = glob(settings.TEST_DATA_GENERATOR_PATH_PATTERN, recursive=True)
     sha_hash_manager = SHAHashManager()
 
     for test_data_generator in test_data_generators:
@@ -97,9 +99,7 @@ def generate_test_data_from_generator():
             logger.info(f"Test data generator {test_data_generator} is up to date.")
             continue
         else:
-            logger.info(
-                f"Test data generator {test_data_generator} has changed. Regenerating..."
-            )
+            logger.info(f"Test data generator {test_data_generator} has changed. Regenerating...")
 
         module_name = (
             test_data_generator.replace(str(settings.PROJECT_ROOT_DIR), "")
@@ -108,14 +108,20 @@ def generate_test_data_from_generator():
             .replace("/", ".")
         )
 
-        logger.info(f"Importing module: {module_name}")
-        module = importlib.import_module(module_name)
-        generator_function = getattr(module, "generate_test_data")
+        try:
+            logger.info(f"Importing module: {module_name}")
+            module = importlib.import_module(module_name)
+            generator_function = module.generate_test_data
 
-        logger.info(f"Running generator function for {test_data_generator}")
-        generator_function()
-        logger.info(f"Generator completed for {test_data_generator}")
+            logger.info(f"Running generator function for {test_data_generator}")
+            generator_function()
+            logger.info(f"Generator completed for {test_data_generator}")
 
-        logger.info(f"Saving hash for {test_data_generator}")
-        sha_hash_manager.generate_and_save_hash(test_data_generator, sha_hash_path)
-        logger.info(f"Hash saved for {test_data_generator}")
+            logger.info(f"Saving hash for {test_data_generator}")
+            sha_hash_manager.generate_and_save_hash(test_data_generator, sha_hash_path)
+            logger.info(f"Hash saved for {test_data_generator}")
+
+        except Exception as e:
+            logger.error(f"Error during test data generation: {e}")
+
+            raise Exception(f"Test data generation failed: {e}") from e
