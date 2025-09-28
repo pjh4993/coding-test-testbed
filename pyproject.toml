@@ -1,0 +1,17 @@
+[project]
+name = "coding-test-testbed"
+version = "0.1.0"
+description = "Testbed for coding test"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8.3.0",
+    "ipykernel>=6.30.1",
+    "pandas>=2.3.2",
+    "pyarrow>=21.0.0",
+    "pydantic-settings>=2.11.0",
+    "pyyaml>=6.0.3",
+]
+
+[project.scripts]
+testbed = "cli:cli"
