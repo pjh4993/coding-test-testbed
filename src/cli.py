@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """CLI for the project."""
 
 import logging
@@ -9,8 +10,7 @@ from utils.data_generator import generate_test_data_from_generator
 
 
 def setup_logger(level: str = "INFO", verbose: bool = False) -> logging.Logger:
-    """
-    Set up logger for CLI with stdio output.
+    """Set up logger for CLI with stdio output.
 
     Args:
         level: Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
@@ -18,6 +18,7 @@ def setup_logger(level: str = "INFO", verbose: bool = False) -> logging.Logger:
 
     Returns:
         Configured logger
+
     """
     # Create logger
     logger = logging.getLogger()
@@ -26,10 +27,7 @@ def setup_logger(level: str = "INFO", verbose: bool = False) -> logging.Logger:
     logger.handlers.clear()
 
     # Set level
-    if verbose:
-        log_level = logging.DEBUG
-    else:
-        log_level = getattr(logging, level.upper(), logging.INFO)
+    log_level = logging.DEBUG if verbose else getattr(logging, level.upper(), logging.INFO)
 
     logger.setLevel(log_level)
 
@@ -54,8 +52,7 @@ def setup_logger(level: str = "INFO", verbose: bool = False) -> logging.Logger:
 
 
 def get_logger(name: str = None) -> logging.Logger:
-    """
-    Get a logger instance for use throughout the application.
+    """Get a logger instance for use throughout the application.
 
     Args:
         name: Logger name (defaults to calling module)
@@ -69,15 +66,11 @@ def get_logger(name: str = None) -> logging.Logger:
 @click.group()
 @click.option(
     "--log-level",
-    type=click.Choice(
-        ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], case_sensitive=False
-    ),
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], case_sensitive=False),
     default="INFO",
     help="Set the logging level",
 )
-@click.option(
-    "--verbose", "-v", is_flag=True, help="Enable verbose logging (DEBUG level)"
-)
+@click.option("--verbose", "-v", is_flag=True, help="Enable verbose logging (DEBUG level)")
 @click.pass_context
 def cli(ctx, log_level, verbose):
     """CLI for the project."""
@@ -103,7 +96,7 @@ def generate_test_data(ctx):
         logger.info("Test data generation completed successfully")
     except Exception as e:
         logger.error(f"Error during test data generation: {e}")
-        raise click.ClickException(f"Test data generation failed: {e}")
+        raise click.ClickException(f"Test data generation failed: {e}") from e
 
 
 if __name__ == "__main__":

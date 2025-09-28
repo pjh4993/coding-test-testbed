@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Test data generator utilities for generating test data."""
 
 import importlib
@@ -125,3 +126,5 @@ def generate_test_data_from_generator():
             logger.error(f"Error during test data generation: {e}")
 
             raise Exception(f"Test data generation failed: {e}") from e
+
+    return 0
