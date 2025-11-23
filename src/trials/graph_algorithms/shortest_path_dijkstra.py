@@ -18,7 +18,29 @@ Medium
 
 """
 
-from typing import List, Tuple
+from collections import defaultdict
+from typing import Dict, List, Tuple
+
+
+def build_graph(
+    n: int, edges: List[Tuple[int, int, int]], directed=False, weighted=False
+) -> Dict[int, List[Tuple[int, int]]]:
+    """Build adjacency list from edges."""
+
+    graph = defaultdict(list)
+
+    for u, v, *w in edges:
+        if weighted:
+            weight = w[0]
+            graph[u].append((v, weight))
+            if not directed:
+                graph[v].append((u, weight))
+        else:
+            graph[u].append(v)
+            if not directed:
+                graph[v].append(u)
+
+    return graph
 
 
 def solution(n: int, edges: List[Tuple[int, int, int]], s: int) -> List[int]:
